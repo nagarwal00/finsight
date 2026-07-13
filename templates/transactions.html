@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Transactions — FinSight</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark px-4">
+        <span class="navbar-brand">💰 FinSight</span>
+        <div>
+            <span class="text-white me-3">Hi, {{ user.name }}</span>
+            <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
+            <a href="/add" class="btn btn-outline-light btn-sm me-2">➕ Add</a>
+            <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>📋 All Transactions</h3>
+            <a href="/add" class="btn btn-primary btn-sm">➕ Add New</a>
+        </div>
+
+        <!-- Filter Bar -->
+        <form method="GET" class="row g-2 mb-4">
+            <div class="col-md-4">
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    <option value="Food" {% if selected_category == 'Food' %}selected{% endif %}>🍕 Food</option>
+                    <option value="Transport" {% if selected_category == 'Transport' %}selected{% endif %}>🚌 Transport</option>
+                    <option value="Subscriptions" {% if selected_category == 'Subscriptions' %}selected{% endif %}>📱 Subscriptions</option>
+                    <option value="Shopping" {% if selected_category == 'Shopping' %}selected{% endif %}>🛍️ Shopping</option>
+                    <option value="Health" {% if selected_category == 'Health' %}selected{% endif %}>💊 Health</option>
+                    <option value="Education" {% if selected_category == 'Education' %}selected{% endif %}>📚 Education</option>
+                    <option value="Entertainment" {% if selected_category == 'Entertainment' %}selected{% endif %}>🎬 Entertainment</option>
+                    <option value="Other" {% if selected_category == 'Other' %}selected{% endif %}>📦 Other</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="month" name="month" class="form-control" value="{{ selected_month }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-secondary w-100">Filter</button>
+            </div>
+            <div class="col-md-2">
+                <a href="/transactions" class="btn btn-outline-secondary w-100">Clear</a>
+            </div>
+        </form>
+
+        <!-- Summary Bar -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-danger">
+                    <div class="card-body py-2">
+                        <small>Total Spent</small>
+                        <h5 class="mb-0">₹{{ total_spent }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-success">
+                    <div class="card-body py-2">
+                        <small>Transactions</small>
+                        <h5 class="mb-0">{{ transactions|length }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-primary">
+                    <div class="card-body py-2">
+                        <small>Avg per Transaction</small>
+                        <h5 class="mb-0">₹{{ avg_amount }}</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        {% if transactions %}
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td>{{ t.date.strftime('%d %b %Y') }}</td>
+                    <td>{{ t.description }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if t.category == 'Food' %}bg-warning text-dark
+                            {% elif t.category == 'Transport' %}bg-info text-dark
+                            {% elif t.category == 'Subscriptions' %}bg-primary
+                            {% elif t.category == 'Shopping' %}bg-success
+                            {% elif t.category == 'Health' %}bg-danger
+                            {% elif t.category == 'Education' %}bg-secondary
+                            {% elif t.category == 'Entertainment' %}bg-dark
+                            {% else %}bg-light text-dark{% endif %}">
+                            {{ t.category }}
+                        </span>
+                    </td>
+                    <td class="fw-bold">₹{{ t.amount }}</td>
+                    <td>
+                        <a href="/delete/{{ t.id }}" 
+                           onclick="return confirm('Delete this transaction?')"
+                           class="btn btn-outline-danger btn-sm">🗑️</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <h5>No transactions found.</h5>
+            <a href="/add" class="btn btn-primary mt-2">Add your first transaction</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

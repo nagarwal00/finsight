@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>What-If Simulator — FinSight</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark px-4">
+        <span class="navbar-brand">💰 FinSight</span>
+        <div>
+            <span class="text-white me-3">Hi, {{ user.name }}</span>
+            <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
+            <a href="/report" class="btn btn-outline-light btn-sm me-2">Report</a>
+            <a href="/trends" class="btn btn-outline-light btn-sm me-2">Trends</a>
+            <a href="/breakdown" class="btn btn-outline-light btn-sm me-2">Breakdown</a>
+            <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container mt-5" style="max-width: 850px;">
+        <h3 class="mb-1">🎯 What-If Simulator</h3>
+        <p class="text-muted mb-4">Simulate how small changes in your spending habits
+        compound into big differences over time.</p>
+
+        <div class="row">
+
+            <!-- Left: Controls -->
+            <div class="col-md-5">
+                <div class="card shadow-sm p-4 mb-4">
+                    <h6 class="mb-3">⚙️ Adjust Your Spending</h6>
+
+                    <!-- Category cuts -->
+                    <label class="form-label fw-bold">Category to Cut</label>
+                    <select id="categorySelect" class="form-select mb-3">
+                        {% for cat, total in category_totals.items() %}
+                        <option value="{{ total }}">{{ cat }} (₹{{ total }}/month)</option>
+                        {% endfor %}
+                    </select>
+
+                    <label class="form-label fw-bold">
+                        Cut by: <span id="cutLabel">20</span>%
+                    </label>
+                    <input type="range" id="cutSlider" class="form-range mb-3"
+                           min="5" max="100" value="20" step="5"
+                           oninput="updateSimulation()">
+
+                    <label class="form-label fw-bold">Time Period</label>
+                    <select id="yearSelect" class="form-select mb-3"
+                            onchange="updateSimulation()">
+                        <option value="1">1 Year</option>
+                        <option value="3">3 Years</option>
+                        <option value="5" selected>5 Years</option>
+                        <option value="10">10 Years</option>
+                    </select>
+
+                    <label class="form-label fw-bold">
+                        Investment Return: <span id="returnLabel">7</span>% p.a.
+                    </label>
+                    <input type="range" id="returnSlider" class="form-range mb-3"
+                           min="0" max="15" value="7" step="1"
+                           oninput="updateSimulation()">
+
+                    <hr>
+
+                    <!-- Extra saving -->
+                    <label class="form-label fw-bold">
+                        Also save extra: ₹<span id="extraLabel">0</span>/month
+                    </label>
+                    <input type="range" id="extraSlider" class="form-range"
+                           min="0" max="5000" value="0" step="100"
+                           oninput="updateSimulation()">
+                </div>
+            </div>
+
+            <!-- Right: Results -->
+            <div class="col-md-7">
+
+                <!-- Result Cards -->
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <div class="card text-white bg-success shadow-sm">
+                            <div class="card-body py-3">
+                                <small>Monthly Savings</small>
+                                <h4 id="monthlySaving" class="mb-0">₹0</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card text-white bg-primary shadow-sm">
+                            <div class="card-body py-3">
+                                <small>Total Saved (no invest)</small>
+                                <h4 id="totalSaved" class="mb-0">₹0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <div class="card text-white bg-warning shadow-sm">
+                            <div class="card-body py-3">
+                                <small>If Invested</small>
+                                <h4 id="totalInvested" class="mb-0">₹0</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card text-white bg-danger shadow-sm">
+                            <div class="card-body py-3">
+                                <small>Interest Earned</small>
+                                <h4 id="interestEarned" class="mb-0">₹0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="card shadow-sm p-3 mb-4">
+                    <canvas id="growthChart" height="160"></canvas>
+                </div>
+
+                <!-- Insight message -->
+                <div class="alert alert-info" id="insightBox">
+                    Adjust the sliders to see your savings grow.
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenario Comparison Table -->
+        <div class="card shadow-sm mt-2">
+            <div class="card-body">
+                <h6 class="mb-3">📊 Quick Scenario Comparison</h6>
+                <table class="table table-sm">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>If you cut spending by</th>
+                            <th>Monthly saving</th>
+                            <th>5-Year (no invest)</th>
+                            <th>5-Year (7% return)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scenario in scenarios %}
+                        <tr>
+                            <td>{{ scenario.label }}</td>
+                            <td class="text-success fw-bold">₹{{ scenario.monthly }}</td>
+                            <td>₹{{ scenario.flat }}</td>
+                            <td class="text-warning fw-bold">₹{{ scenario.invested }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chart = null;
+
+        function getSelectedCategoryAmount() {
+            const select = document.getElementById('categorySelect');
+            return parseFloat(select.options[select.selectedIndex].value);
+        }
+
+        function updateSimulation() {
+            const catAmount = getSelectedCategoryAmount();
+            const cutPct = parseInt(document.getElementById('cutSlider').value);
+            const years = parseInt(document.getElementById('yearSelect').value);
+            const returnRate = parseInt(document.getElementById('returnSlider').value) / 100;
+            const extra = parseInt(document.getElementById('extraSlider').value);
+
+            document.getElementById('cutLabel').textContent = cutPct;
+            document.getElementById('returnLabel').textContent = parseInt(document.getElementById('returnSlider').value);
+            document.getElementById('extraLabel').textContent = extra;
+
+            const monthlySaving = Math.round((catAmount * cutPct / 100) + extra);
+            const months = years * 12;
+            const totalFlat = monthlySaving * months;
+
+            // Compound interest calculation
+            let totalInvested = 0;
+            if (returnRate > 0) {
+                const monthlyRate = returnRate / 12;
+                totalInvested = Math.round(
+                    monthlySaving * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate)
+                );
+            } else {
+                totalInvested = totalFlat;
+            }
+
+            const interestEarned = totalInvested - totalFlat;
+
+            // Update cards
+            document.getElementById('monthlySaving').textContent = '₹' + monthlySaving.toLocaleString('en-IN');
+            document.getElementById('totalSaved').textContent = '₹' + totalFlat.toLocaleString('en-IN');
+            document.getElementById('totalInvested').textContent = '₹' + totalInvested.toLocaleString('en-IN');
+            document.getElementById('interestEarned').textContent = '₹' + interestEarned.toLocaleString('en-IN');
+
+            // Update insight
+            const insight = document.getElementById('insightBox');
+            if (monthlySaving === 0) {
+                insight.textContent = 'Adjust the sliders to see your savings grow.';
+            } else {
+                insight.innerHTML = `💡 By saving <strong>₹${monthlySaving.toLocaleString('en-IN')}/month</strong>, 
+                you'll have <strong>₹${totalInvested.toLocaleString('en-IN')}</strong> in ${years} year${years > 1 ? 's' : ''} 
+                if invested at ${parseInt(document.getElementById('returnSlider').value)}% returns. 
+                That's <strong>₹${interestEarned.toLocaleString('en-IN')} in interest alone</strong> — money your money made for you.`;
+            }
+
+            // Update chart
+            const labels = [];
+            const flatData = [];
+            const investedData = [];
+
+            for (let m = 1; m <= months; m++) {
+                if (m % Math.max(1, Math.floor(months / 12)) === 0 || m === months) {
+                    labels.push('Month ' + m);
+                    flatData.push(monthlySaving * m);
+                    if (returnRate > 0) {
+                        const monthlyRate = returnRate / 12;
+                        investedData.push(Math.round(
+                            monthlySaving * ((Math.pow(1 + monthlyRate, m) - 1) / monthlyRate)
+                        ));
+                    } else {
+                        investedData.push(monthlySaving * m);
+                    }
+                }
+            }
+
+            if (chart) chart.destroy();
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Saved (no invest)',
+                            data: flatData,
+                            borderColor: '#36A2EB',
+                            backgroundColor: 'rgba(54,162,235,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'If Invested',
+                            data: investedData,
+                            borderColor: '#FFCE56',
+                            backgroundColor: 'rgba(255,206,86,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: v => '₹' + v.toLocaleString('en-IN')
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Run on page load
+        document.getElementById('categorySelect').addEventListener('change', updateSimulation);
+        document.getElementById('cutSlider').addEventListener('input', updateSimulation);
+        updateSimulation();
+    </script>
+</body>
+</html>
