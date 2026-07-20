@@ -7,17 +7,18 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark px-4">
-        <span class="navbar-brand">💰 FinSight</span>
-        <div>
-            <span class="text-white me-3">Hi, {{ user.name }}</span>
-            <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
-            <a href="/report" class="btn btn-outline-light btn-sm me-2">Report</a>
-            <a href="/trends" class="btn btn-outline-light btn-sm me-2">Trends</a>
-            <a href="/breakdown" class="btn btn-outline-light btn-sm me-2">Breakdown</a>
-            <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
-        </div>
-    </nav>
+    <nav class="navbar navbar-dark px-4 py-3">
+    <span class="navbar-brand">💰 FinSight</span>
+    <div class="d-flex align-items-center gap-2">
+        <a href="/dashboard" class="nav-link-custom">Dashboard</a>
+        <a href="/transactions" class="nav-link-custom">Transactions</a>
+        <a href="/breakdown" class="nav-link-custom">Breakdown</a>
+        <a href="/trends" class="nav-link-custom">Trends</a>
+        <a href="/report" class="nav-link-custom">Report</a>
+        <a href="/add" class="btn btn-primary btn-sm ms-2">+ Add</a>
+        <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+    </div>
+</nav>
 
     <div class="container mt-5" style="max-width: 850px;">
         <h3 class="mb-1">🎯 What-If Simulator</h3>

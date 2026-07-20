@@ -7,93 +7,88 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark px-4">
+    <nav class="navbar navbar-dark px-4 py-3">
         <span class="navbar-brand">💰 FinSight</span>
-        <div>
-            <span class="text-white me-3">Hi, {{ user.name }}</span>
-            <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
-            <a href="/transactions" class="btn btn-outline-light btn-sm me-2">Transactions</a>
-            <a href="/add" class="btn btn-outline-light btn-sm me-2">➕ Add</a>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/dashboard" class="nav-link-custom">Dashboard</a>
+            <a href="/transactions" class="nav-link-custom">Transactions</a>
+            <a href="/trends" class="nav-link-custom">Trends</a>
+            <a href="/report" class="nav-link-custom">Report</a>
+            <a href="/simulator" class="nav-link-custom">Simulator</a>
+            <a href="/add" class="btn btn-primary btn-sm ms-2">+ Add</a>
             <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
         </div>
     </nav>
 
-    <div class="container mt-5">
-        <h3 class="mb-4">📊 Spending Breakdown</h3>
-
-        <!-- Month Filter -->
-        <form method="GET" class="row g-2 mb-4">
-            <div class="col-md-3">
-                <input type="month" name="month" class="form-control" value="{{ selected_month }}">
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-0" style="font-size: 20px;">Spending Breakdown</h2>
+                <p class="text-muted mb-0 mt-1">Where your money is going</p>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-secondary w-100">Filter</button>
-            </div>
-            <div class="col-md-2">
-                <a href="/breakdown" class="btn btn-outline-secondary w-100">Clear</a>
-            </div>
-        </form>
+            <form method="GET" class="d-flex gap-2">
+                <input type="month" name="month" class="form-control" value="{{ selected_month }}" style="width:180px;">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="/breakdown" class="btn btn-outline-secondary">Clear</a>
+            </form>
+        </div>
 
         {% if breakdown %}
-        <div class="row">
-
-            <!-- Pie Chart -->
+        <div class="row g-4">
             <div class="col-md-5">
-                <div class="card p-3">
-                    <canvas id="pieChart"></canvas>
+                <div class="card h-100">
+                    <div class="card-body">
+                        <p class="fw-600 mb-3" style="font-size:14px;">Category Distribution</p>
+                        <canvas id="pieChart"></canvas>
+                    </div>
                 </div>
             </div>
-
-            <!-- Category Table -->
             <div class="col-md-7">
-                <div class="card">
+                <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="card-title mb-3">Category Summary</h5>
-                        <table class="table">
+                        <p class="fw-600 mb-3" style="font-size:14px;">Category Summary</p>
+                        <table class="table mb-3">
                             <thead>
                                 <tr>
                                     <th>Category</th>
-                                    <th>Total Spent</th>
-                                    <th>% of Spending</th>
-                                    <th>Transactions</th>
+                                    <th>Total</th>
+                                    <th>Share</th>
+                                    <th>Count</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in breakdown %}
                                 <tr>
-                                    <td>{{ item.category }}</td>
-                                    <td class="fw-bold">₹{{ item.total }}</td>
-                                    <td>
-                                        <div class="progress" style="height: 20px;">
-                                            <div class="progress-bar bg-primary" 
-                                                 style="width: {{ item.percentage }}%">
-                                                {{ item.percentage }}%
+                                    <td style="font-weight:500;">{{ item.category }}</td>
+                                    <td style="font-weight:600;">₹{{ item.total }}</td>
+                                    <td style="width:180px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height:6px;">
+                                                <div class="progress-bar" style="width:{{ item.percentage }}%;"></div>
                                             </div>
+                                            <span class="text-muted" style="font-size:12px; min-width:35px;">{{ item.percentage }}%</span>
                                         </div>
                                     </td>
-                                    <td>{{ item.count }}</td>
+                                    <td class="text-muted">{{ item.count }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
-                            <tfoot class="table-dark">
-                                <tr>
-                                    <td><strong>Total</strong></td>
-                                    <td><strong>₹{{ total_spent }}</strong></td>
+                            <tfoot>
+                                <tr style="border-top: 2px solid #e2e8f0;">
+                                    <td style="font-weight:600; color:#0f172a;">Total</td>
+                                    <td style="font-weight:700; color:#0f172a;">₹{{ total_spent }}</td>
                                     <td></td>
-                                    <td><strong>{{ total_count }}</strong></td>
+                                    <td style="font-weight:600; color:#0f172a;">{{ total_count }}</td>
                                 </tr>
                             </tfoot>
                         </table>
-
-                        <!-- Insight Box -->
-                        <div class="alert alert-warning mt-3">
-                            <strong>💡 Insight:</strong> Your highest spending category is 
-                            <strong>{{ breakdown[0].category }}</strong> at 
+                        <div class="alert alert-info">
+                            💡 <strong>{{ breakdown[0].category }}</strong> is your biggest expense at
                             ₹{{ breakdown[0].total }} ({{ breakdown[0].percentage }}% of total).
                             {% if breakdown[0].percentage > 40 %}
-                            That's quite high — consider setting a budget for it.
+                            Consider setting a monthly budget for it.
                             {% else %}
-                            Looks balanced!
+                            Your spending looks balanced!
                             {% endif %}
                         </div>
                     </div>
@@ -101,29 +96,24 @@
             </div>
         </div>
 
-        <!-- Chart.js Script -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
-            const ctx = document.getElementById('pieChart').getContext('2d');
-            new Chart(ctx, {
+            new Chart(document.getElementById('pieChart').getContext('2d'), {
                 type: 'doughnut',
                 data: {
                     labels: {{ labels | tojson }},
                     datasets: [{
                         data: {{ values | tojson }},
-                        backgroundColor: [
-                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
-                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
-                        ],
-                        borderWidth: 2
+                        backgroundColor: ['#1e293b','#334155','#475569','#64748b','#94a3b8','#cbd5e1','#e2e8f0'],
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { position: 'bottom' },
-                        title: {
-                            display: true,
-                            text: 'Spending by Category'
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 11, family: 'Inter' }, padding: 14 }
                         }
                     }
                 }
@@ -131,12 +121,13 @@
         </script>
 
         {% else %}
-        <div class="text-center py-5 text-muted">
-            <h5>No transactions found for this period.</h5>
-            <a href="/add" class="btn btn-primary mt-2">Add Transactions</a>
+        <div class="card">
+            <div class="card-body text-center py-5 text-muted">
+                <p>No transactions found for this period.</p>
+                <a href="/add" class="btn btn-primary btn-sm mt-2">Add Transactions</a>
+            </div>
         </div>
         {% endif %}
-
     </div>
 </body>
 </html>

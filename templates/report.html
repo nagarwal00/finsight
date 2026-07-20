@@ -6,123 +6,138 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark px-4">
+    <nav class="navbar navbar-dark px-4 py-3">
         <span class="navbar-brand">💰 FinSight</span>
-        <div>
-            <span class="text-white me-3">Hi, {{ user.name }}</span>
-            <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
-            <a href="/trends" class="btn btn-outline-light btn-sm me-2">Trends</a>
-            <a href="/breakdown" class="btn btn-outline-light btn-sm me-2">Breakdown</a>
-            <a href="/transactions" class="btn btn-outline-light btn-sm me-2">Transactions</a>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/dashboard" class="nav-link-custom">Dashboard</a>
+            <a href="/transactions" class="nav-link-custom">Transactions</a>
+            <a href="/breakdown" class="nav-link-custom">Breakdown</a>
+            <a href="/trends" class="nav-link-custom">Trends</a>
+            <a href="/simulator" class="nav-link-custom">Simulator</a>
+            <a href="/add" class="btn btn-primary btn-sm ms-2">+ Add</a>
             <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
         </div>
     </nav>
 
-    <div class="container mt-5" style="max-width: 800px;">
+    <div class="container py-4" style="max-width: 780px;">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3>🪞 Honest Mirror Report</h3>
-            <!-- Month Selector -->
+            <div>
+                <h2 class="mb-0" style="font-size: 20px;">Honest Mirror Report</h2>
+                <p class="text-muted mb-0 mt-1">Your monthly financial verdict</p>
+            </div>
             <form method="GET" class="d-flex gap-2">
-                <input type="month" name="month" class="form-control" value="{{ selected_month }}">
-                <button type="submit" class="btn btn-secondary">View</button>
+                <input type="month" name="month" class="form-control" value="{{ selected_month }}" style="width:180px;">
+                <button type="submit" class="btn btn-primary">View</button>
             </form>
         </div>
 
         {% if report %}
 
-        <!-- Header Card -->
-        <div class="card mb-4 border-0 shadow-sm">
-            <div class="card-body p-4"
-                style="background: linear-gradient(135deg, #1a1a2e, #16213e); color: white; border-radius: 8px;">
-                <h4>{{ report.month_name }} Report</h4>
-                <h2 class="mt-2">₹{{ report.total_spent }} spent</h2>
-                <p class="mb-0 opacity-75">
-                    {% if report.income > 0 %}
-                        {{ report.savings_rate }}% of your ₹{{ report.income }} income
-                    {% else %}
-                        Across {{ report.transaction_count }} transactions
-                    {% endif %}
+        <!-- Header -->
+        <div class="card mb-4" style="background: #0f172a; border: none;">
+            <div class="card-body p-4" style="color: white;">
+                <p style="font-size:13px; color: rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:0.6px;">{{ report.month_name }}</p>
+                <h2 style="font-size:32px; font-weight:800; letter-spacing:-1px;">₹{{ report.total_spent }} spent</h2>
+                {% if report.income > 0 %}
+                <p style="color: rgba(255,255,255,0.5); font-size:14px; margin-top:4px;">
+                    {{ report.savings_rate }}% of your ₹{{ report.income }} monthly income
                 </p>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Verdict -->
-        <div class="card mb-4 border-0 shadow-sm">
-            <div class="card-body p-4">
-                <h5 class="mb-3">📋 The Verdict</h5>
-                <div class="alert
-                    {% if report.health_score >= 70 %}alert-success
-                    {% elif report.health_score >= 40 %}alert-warning
-                    {% else %}alert-danger{% endif %}">
-                    <strong>Financial Health Score: {{ report.health_score }}/100</strong>
+        <!-- Health Score -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <p class="fw-600 mb-3" style="font-size:14px;">Financial Health Score</p>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <span style="font-size:36px; font-weight:800;
+                        color: {% if report.health_score >= 70 %}#16a34a{% elif report.health_score >= 40 %}#d97706{% else %}#dc2626{% endif %};">
+                        {{ report.health_score }}
+                    </span>
+                    <span style="font-size:16px; color:#94a3b8; font-weight:500;">/100</span>
+                    <div class="flex-grow-1">
+                        <div class="progress" style="height:8px;">
+                            <div class="progress-bar
+                                {% if report.health_score >= 70 %}bg-success
+                                {% elif report.health_score >= 40 %}bg-warning
+                                {% else %}bg-danger{% endif %}"
+                                style="width: {{ report.health_score }}%;">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p class="lead">{{ report.verdict }}</p>
+                <p style="font-size:14px; color:#334155; line-height:1.7;">{{ report.verdict }}</p>
             </div>
         </div>
 
-        <!-- Key Insights -->
-        <div class="card mb-4 border-0 shadow-sm">
-            <div class="card-body p-4">
-                <h5 class="mb-3">💡 Key Insights</h5>
+        <!-- Insights -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <p class="fw-600 mb-3" style="font-size:14px;">Key Insights</p>
                 {% for insight in report.insights %}
-                <div class="d-flex align-items-start mb-3">
-                    <span class="me-3 fs-5">{{ insight.icon }}</span>
+                <div class="d-flex gap-3 mb-3 pb-3" style="border-bottom: 1px solid #f1f5f9;">
+                    <span style="font-size:20px;">{{ insight.icon }}</span>
                     <div>
-                        <strong>{{ insight.title }}</strong>
-                        <p class="mb-0 text-muted">{{ insight.detail }}</p>
+                        <p style="font-weight:600; font-size:14px; margin-bottom:2px;">{{ insight.title }}</p>
+                        <p class="text-muted mb-0" style="font-size:13px;">{{ insight.detail }}</p>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- 5 Year Impact -->
+        <!-- 5 Year Projection -->
         {% if report.income > 0 %}
-        <div class="card mb-4 border-0 shadow-sm">
-            <div class="card-body p-4">
-                <h5 class="mb-3">🔭 The Long View — What This Means in 5 Years</h5>
-                <div class="row text-center">
+        <div class="card mb-4">
+            <div class="card-body">
+                <p class="fw-600 mb-3" style="font-size:14px;">5-Year Projection</p>
+                <div class="row g-3 text-center">
                     <div class="col-md-4">
-                        <div class="p-3 bg-light rounded">
-                            <small class="text-muted">Current Savings/Month</small>
-                            <h4 class="text-success">₹{{ report.monthly_savings }}</h4>
+                        <div style="background:#f8fafc; border-radius:10px; padding:16px;">
+                            <p class="text-muted" style="font-size:12px;">Savings/Month</p>
+                            <p style="font-size:22px; font-weight:700; color:#16a34a; margin:0;">₹{{ report.monthly_savings }}</p>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="p-3 bg-light rounded">
-                            <small class="text-muted">5-Year Savings (no interest)</small>
-                            <h4 class="text-primary">₹{{ report.five_year_savings }}</h4>
+                        <div style="background:#f8fafc; border-radius:10px; padding:16px;">
+                            <p class="text-muted" style="font-size:12px;">5 Years (no invest)</p>
+                            <p style="font-size:22px; font-weight:700; color:#1e293b; margin:0;">₹{{ report.five_year_savings }}</p>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="p-3 bg-light rounded">
-                            <small class="text-muted">5-Year (7% annual growth)</small>
-                            <h4 class="text-warning">₹{{ report.five_year_invested }}</h4>
+                        <div style="background:#f8fafc; border-radius:10px; padding:16px;">
+                            <p class="text-muted" style="font-size:12px;">5 Years (7% return)</p>
+                            <p style="font-size:22px; font-weight:700; color:#d97706; margin:0;">₹{{ report.five_year_invested }}</p>
                         </div>
                     </div>
                 </div>
-                <p class="text-muted mt-3 small">{{ report.longview_message }}</p>
+                <p class="text-muted mt-3 mb-0" style="font-size:13px;">{{ report.longview_message }}</p>
             </div>
         </div>
         {% endif %}
 
         <!-- Action Plan -->
-        <div class="card mb-4 border-0 shadow-sm">
-            <div class="card-body p-4">
-                <h5 class="mb-3">🎯 Your Action Plan for Next Month</h5>
+        <div class="card">
+            <div class="card-body">
+                <p class="fw-600 mb-3" style="font-size:14px;">Your Action Plan</p>
                 {% for action in report.action_plan %}
-                <div class="d-flex align-items-center mb-2">
-                    <span class="badge bg-primary me-3">{{ loop.index }}</span>
-                    <span>{{ action }}</span>
+                <div class="d-flex align-items-start gap-3 mb-3">
+                    <span style="background:#1e293b; color:white; border-radius:50%; width:24px; height:24px;
+                        display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; flex-shrink:0;">
+                        {{ loop.index }}
+                    </span>
+                    <p style="font-size:14px; color:#334155; margin:0; padding-top:2px;">{{ action }}</p>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
         {% else %}
-        <div class="text-center py-5 text-muted">
-            <h5>No data found for this month.</h5>
-            <p>Select a month where you have transactions.</p>
+        <div class="card">
+            <div class="card-body text-center py-5 text-muted">
+                <p>No data found for this month.</p>
+            </div>
         </div>
         {% endif %}
     </div>
